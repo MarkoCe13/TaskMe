@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../screens/HomeScreen.dart';
+
 class Header extends StatelessWidget implements PreferredSizeWidget {
   const Header({super.key});
 
@@ -17,8 +19,11 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
           ),
           const Spacer(),
           IconButton(
-            onPressed: () {
-             
+             onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const HomeScreen()),
+              );
             },
             icon: const Icon(
               Icons.person_outline,

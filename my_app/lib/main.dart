@@ -1,21 +1,38 @@
 import 'package:flutter/material.dart';
-import 'package:my_app/src/screens/HomeScreen.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:my_app/src/screens/AddTaskScreen.dart';
+import 'package:my_app/src/screens/SignIn.dart';
+import 'package:my_app/src/screens/TasksScreen.dart';
+import 'package:my_app/src/services/notification_service.dart';
+import 'firebase_options.dart';
+import 'src/screens/HomeScreen.dart';
+import 'src/screens/SignUp.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() {
-  runApp(const MainApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService.instance.init();
+  await dotenv.load(fileName: ".env");
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  runApp(const MyApp());
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
-
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: HomeScreen()
-        ),
-      ),
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      routes: {
+        '/signin': (_) => const SignInScreen(),
+        '/signup': (_) => const SignUpScreen(),
+        '/home': (_) => const HomeScreen(),
+        '/add': (_) => const AddTaskScreen(),
+        '/tasks': (_) => const TasksScreen(),
+      },
+      home: const SignInScreen(),
     );
   }
 }
