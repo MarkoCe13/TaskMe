@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:my_app/src/services/notification_service.dart';
+import 'package:my_app/src/services/tasks_status_service.dart';
 
 import '../components/header.dart';
 import '../components/footer.dart';
@@ -13,10 +14,11 @@ class TasksScreen extends StatefulWidget {
   State<TasksScreen> createState() => _TasksScreenState();
 }
 
-enum TaskSortMode { deadline, status, category }
+enum DeadlineOrder { oldestFirst, newestFirst }
 
 class _TasksScreenState extends State<TasksScreen> {
-  TaskSortMode _mode = TaskSortMode.deadline;
+  String _statusFirst = 'pending'; 
+  DeadlineOrder _deadlineOrder = DeadlineOrder.oldestFirst;
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +28,8 @@ class _TasksScreenState extends State<TasksScreen> {
         body: Center(child: Text('You must be signed in.')),
       );
     }
+
+    markMissedTasksForUser(user.uid);
 
     final tasksQuery = FirebaseFirestore.instance
         .collection('tasks')
@@ -39,11 +43,58 @@ class _TasksScreenState extends State<TasksScreen> {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              _FilterBar(
-                mode: _mode,
-                onChanged: (m) => setState(() => _mode = m),
+              Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      value: _statusFirst,
+                      decoration: _dropdownDecoration(),
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'pending',
+                          child: Text('PENDING'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'missed',
+                          child: Text('MISSED'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'done',
+                          child: Text('DONE'),
+                        ),
+                      ],
+                      onChanged: (v) {
+                        if (v == null) return;
+                        setState(() => _statusFirst = v);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: DropdownButtonFormField<DeadlineOrder>(
+                      value: _deadlineOrder,
+                      decoration: _dropdownDecoration(),
+                      items: const [
+                        DropdownMenuItem(
+                          value: DeadlineOrder.oldestFirst,
+                          child: Text('Oldest first'),
+                        ),
+                        DropdownMenuItem(
+                          value: DeadlineOrder.newestFirst,
+                          child: Text('Newest first'),
+                        ),
+                      ],
+                      onChanged: (v) {
+                        if (v == null) return;
+                        setState(() => _deadlineOrder = v);
+                      },
+                    ),
+                  ),
+                ],
               ),
+
               const SizedBox(height: 16),
+
               Expanded(
                 child: StreamBuilder<QuerySnapshot>(
                   stream: tasksQuery.snapshots(),
@@ -52,15 +103,12 @@ class _TasksScreenState extends State<TasksScreen> {
                       return const Center(child: CircularProgressIndicator());
                     }
                     if (snapshot.hasError) {
-                      return Center(
-                        child: Text('Error: ${snapshot.error}'),
-                      );
+                      return Center(child: Text('Error: ${snapshot.error}'));
                     }
+
                     final docs = snapshot.data!.docs;
                     if (docs.isEmpty) {
-                      return const Center(
-                        child: Text('No tasks yet'),
-                      );
+                      return const Center(child: Text('No tasks yet'));
                     }
 
                     final tasks = docs.map((d) {
@@ -70,10 +118,41 @@ class _TasksScreenState extends State<TasksScreen> {
                         title: (data['title'] ?? '') as String,
                         description: (data['description'] ?? '') as String,
                         status: (data['status'] ?? 'pending') as String,
-                        deadline:
-                            (data['deadline'] as Timestamp?)?.toDate(),
+                        deadline: (data['deadline'] as Timestamp?)?.toDate(),
                       );
                     }).toList();
+
+                    final baseOrder = ['pending', 'missed', 'done'];
+                    var order = List<String>.from(baseOrder);
+
+                    final idx = order.indexOf(_statusFirst);
+                    if (idx > 0) {
+                      order = [...order.sublist(idx), ...order.sublist(0, idx)];
+                    }
+
+                    int rank(String s) {
+                      final i = order.indexOf(s.toLowerCase());
+                      return i == -1 ? 999 : i;
+                    }
+
+                    DateTime safeDeadline(_TaskItem t) =>
+                        t.deadline ?? DateTime(9999);
+
+                    int cmpDeadline(_TaskItem a, _TaskItem b) {
+                      final cmp =
+                          safeDeadline(a).compareTo(safeDeadline(b));
+                      return _deadlineOrder == DeadlineOrder.oldestFirst
+                          ? cmp
+                          : -cmp;
+                    }
+
+                    tasks.sort((a, b) {
+                      final ra = rank(a.status);
+                      final rb = rank(b.status);
+                      if (ra != rb) return ra.compareTo(rb);
+
+                      return cmpDeadline(a, b);
+                    });
 
                     return ListView.builder(
                       padding: EdgeInsets.zero,
@@ -97,63 +176,22 @@ class _TasksScreenState extends State<TasksScreen> {
       ),
     );
   }
-}
 
-
-class _FilterBar extends StatelessWidget {
-  final TaskSortMode mode;
-  final ValueChanged<TaskSortMode> onChanged;
-
-  const _FilterBar({
-    required this.mode,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    Widget buildChip(String label, TaskSortMode value) {
-      final selected = mode == value;
-      return GestureDetector(
-        onTap: () => onChanged(value),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-          decoration: BoxDecoration(
-            color: selected ? Colors.grey.shade300 : Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: selected ? Colors.transparent : Colors.grey.shade400,
-            ),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-            ),
-          ),
+  InputDecoration _dropdownDecoration() => InputDecoration(
+        isDense: true,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
         ),
       );
-    }
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        buildChip('Deadline', TaskSortMode.deadline),
-        const SizedBox(width: 8),
-        buildChip('Status', TaskSortMode.status),
-        const SizedBox(width: 8),
-        buildChip('Category', TaskSortMode.category),
-      ],
-    );
-  }
 }
-
 
 class _TaskItem {
   final String id;
   final String title;
   final String description;
-  final String status; 
+  final String status;
   final DateTime? deadline;
 
   _TaskItem({
@@ -173,10 +211,10 @@ class _TaskCard extends StatelessWidget {
   Color get _statusColor {
     switch (task.status.toLowerCase()) {
       case 'done':
-        return const Color(0xFF4CAF50); 
-      case 'doing':
-        return const Color(0xFFFFA726); 
-      default:
+        return const Color(0xFF4CAF50);
+      case 'missed':
+        return const Color(0xFFE53935);
+      default: 
         return Colors.grey.shade400;
     }
   }
@@ -206,7 +244,6 @@ class _TaskCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-          
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -251,9 +288,7 @@ class _TaskCard extends StatelessWidget {
                 ),
               ],
             ),
-
             const SizedBox(height: 12),
-
             Row(
               children: [
                 const Icon(
@@ -262,15 +297,10 @@ class _TaskCard extends StatelessWidget {
                   color: Colors.black87,
                 ),
                 const SizedBox(width: 6),
-                Text(
-                  _deadlineText,
-                  style: const TextStyle(fontSize: 13),
-                ),
+                Text(_deadlineText, style: const TextStyle(fontSize: 13)),
               ],
             ),
-
             const SizedBox(height: 12),
-
             Row(
               children: [
                 SizedBox(
@@ -287,39 +317,36 @@ class _TaskCard extends StatelessWidget {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.black87,
                       foregroundColor: Colors.white,
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 18),
+                      padding: const EdgeInsets.symmetric(horizontal: 18),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(6),
                       ),
                       elevation: 0,
                     ),
-                    child: const Text(
-                      'Edit',
-                      style: TextStyle(fontSize: 13),
-                    ),
+                    child: const Text('Edit', style: TextStyle(fontSize: 13)),
                   ),
                 ),
                 const Spacer(),
                 InkWell(
-                onTap: () async {
-                  final isDone = task.status.toLowerCase() == 'done';
+                  onTap: () async {
+                    final isDone = task.status.toLowerCase() == 'done';
 
-                  if (isDone) {
-                    await FirebaseFirestore.instance
-                        .collection('tasks')
-                        .doc(task.id)
-                        .update({'status': 'pending'});
+                    if (isDone) {
+                      await FirebaseFirestore.instance
+                          .collection('tasks')
+                          .doc(task.id)
+                          .update({'status': 'pending'});
 
-                    if (task.deadline != null &&
-                        task.deadline!.isAfter(DateTime.now())) {
-                      await NotificationService.instance.scheduleDeadlineReminder(
-                        docId: task.id,
-                        title: task.title,
-                        deadline: task.deadline!,
-                        before: const Duration(minutes: 30),
-                      );
-                    }
+                      if (task.deadline != null &&
+                          task.deadline!.isAfter(DateTime.now())) {
+                        await NotificationService.instance
+                            .scheduleDeadlineReminder(
+                          docId: task.id,
+                          title: task.title,
+                          deadline: task.deadline!,
+                          before: const Duration(minutes: 30),
+                        );
+                      }
                     } else {
                       await FirebaseFirestore.instance
                           .collection('tasks')
@@ -327,8 +354,7 @@ class _TaskCard extends StatelessWidget {
                           .update({'status': 'done'});
                       await NotificationService.instance.cancelForDocId(task.id);
                     }
-                },
-
+                  },
                   borderRadius: BorderRadius.circular(20),
                   child: Container(
                     width: 34,
@@ -357,8 +383,6 @@ class _TaskCard extends StatelessWidget {
   }
 }
 
-
-
 class EditTaskScreen extends StatefulWidget {
   final _TaskItem task;
 
@@ -379,6 +403,12 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
   @override
   void initState() {
     super.initState();
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      markMissedTasksForUser(user.uid);
+    }
+
     _titleCtrl = TextEditingController(text: widget.task.title);
     _descCtrl = TextEditingController(text: widget.task.description);
     _status = widget.task.status.toLowerCase();
@@ -442,9 +472,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
         'deadline': Timestamp.fromDate(_deadline!),
       });
 
-      // Sync notifications:
-      // - if DONE => cancel
-      // - if not done and deadline in future => schedule (30min before)
+      // Notification sync
       try {
         if (_status.toLowerCase() == 'done') {
           await NotificationService.instance.cancelForDocId(widget.task.id);
@@ -456,9 +484,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
             before: const Duration(minutes: 30),
           );
         }
-      } catch (_) {
-        // Don't fail saving if notification scheduling fails
-      }
+      } catch (_) {}
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -476,14 +502,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
   }
 
   Future<void> _deleteTask() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('You must be signed in')),
-      );
-      return;
-    }
-
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -514,7 +532,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
           .doc(widget.task.id)
           .delete();
 
-      // Cancel any scheduled reminder for this task
       try {
         await NotificationService.instance.cancelForDocId(widget.task.id);
       } catch (_) {}
@@ -580,9 +597,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                       children: [
                         const Text(
                           'Title',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: TextStyle(fontWeight: FontWeight.w600),
                         ),
                         TextFormField(
                           controller: _titleCtrl,
@@ -613,9 +628,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                       children: [
                         const Text(
                           'Description',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: TextStyle(fontWeight: FontWeight.w600),
                         ),
                         TextFormField(
                           controller: _descCtrl,
@@ -631,6 +644,52 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                 ),
                 const SizedBox(height: 12),
 
+                // Status (ONLY 3 OPTIONS)
+                Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Status',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 6),
+                        DropdownButtonFormField<String>(
+                          value: _status,
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                          ),
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'pending',
+                              child: Text('Pending'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'missed',
+                              child: Text('Missed'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'done',
+                              child: Text('Done'),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            if (value != null) setState(() => _status = value);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Deadline
                 Card(
                   elevation: 2,
                   shape: RoundedRectangleBorder(
@@ -646,16 +705,15 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                         children: [
                           const Text(
                             'Deadline',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: TextStyle(fontWeight: FontWeight.w600),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             _deadlineLabel(),
                             style: TextStyle(
-                              color:
-                                  _deadline == null ? Colors.grey : Colors.black87,
+                              color: _deadline == null
+                                  ? Colors.grey
+                                  : Colors.black87,
                             ),
                           ),
                         ],
@@ -663,9 +721,9 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 20),
 
-                
                 Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [

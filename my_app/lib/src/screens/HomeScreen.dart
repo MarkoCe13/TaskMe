@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:my_app/src/services/tasks_status_service.dart';
 import '../models/task_stats.dart';
 import '../components/header.dart';
 import '../components/footer.dart';
@@ -28,6 +29,10 @@ class _HomeScreenState extends State<HomeScreen> {
       throw Exception('User not signed in');
     }
 
+    // 1) mark missed first
+    await markMissedTasksForUser(authUser.uid);
+
+    // 2) then read user + tasks
     final userDoc = await FirebaseFirestore.instance
         .collection('users')
         .doc(authUser.uid)
@@ -48,13 +53,11 @@ class _HomeScreenState extends State<HomeScreen> {
     final allTime = TaskStats.fromTasks(tasks);
     final last7 = TaskStats.fromTasks(
       tasks.where(
-        (t) => t.createdAt.isAfter(now.subtract(const Duration(days: 7))),
-      ),
+          (t) => t.createdAt.isAfter(now.subtract(const Duration(days: 7)))),
     );
     final last30 = TaskStats.fromTasks(
       tasks.where(
-        (t) => t.createdAt.isAfter(now.subtract(const Duration(days: 30))),
-      ),
+          (t) => t.createdAt.isAfter(now.subtract(const Duration(days: 30)))),
     );
 
     return _ProfileData(
@@ -68,8 +71,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const Header(),                
-      bottomNavigationBar: const Footer(),   
+      appBar: const Header(),
+      bottomNavigationBar: const Footer(),
       body: FutureBuilder<_ProfileData>(
         future: _future,
         builder: (context, snapshot) {
@@ -94,20 +97,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-
                 StatsCard(
                   title: 'All-time stats',
                   stats: data.allTime,
                   showRate: true,
                 ),
                 const SizedBox(height: 16),
-
                 StatsCard(
                   title: 'Last 7 days',
                   stats: data.last7,
                 ),
                 const SizedBox(height: 16),
-
                 StatsCard(
                   title: 'Last month',
                   stats: data.last30,
