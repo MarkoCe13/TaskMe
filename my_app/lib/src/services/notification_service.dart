@@ -1,4 +1,5 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_native_timezone_2025/flutter_native_timezone_2025.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -9,16 +10,17 @@ class NotificationService {
   final _plugin = FlutterLocalNotificationsPlugin();
 
   Future<void> init() async {
-    print('NotificationService.init() START');
     tz.initializeTimeZones();
-    tz.setLocalLocation(tz.local);
+
+    final tzName = await FlutterNativeTimezone.getLocalTimezone();
+    tz.setLocalLocation(tz.getLocation(tzName));
 
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
     const iosInit = DarwinInitializationSettings();
+
     const settings = InitializationSettings(android: androidInit, iOS: iosInit);
 
     await _plugin.initialize(settings);
-    print('NotificationService.init() DONE');
 
     await _plugin
         .resolvePlatformSpecificImplementation<
@@ -34,13 +36,12 @@ class NotificationService {
   int notifIdFromDocId(String docId) => docId.hashCode;
 
   Future<void> debugPending() async {
-  final pending = await _plugin.pendingNotificationRequests();
-  print('PENDING NOTIFICATIONS: ${pending.length}');
-  for (final p in pending) {
-    print('  - id=${p.id}, title=${p.title}, body=${p.body}');
+    final pending = await _plugin.pendingNotificationRequests();
+    print('PENDING NOTIFICATIONS: ${pending.length}');
+    for (final p in pending) {
+      print('  - id=${p.id}, title=${p.title}, body=${p.body}');
+    }
   }
-}
-
 
   Future<void> scheduleDeadlineReminder({
     required String docId,
@@ -49,8 +50,10 @@ class NotificationService {
     Duration before = const Duration(minutes: 30),
   }) async {
     final when = deadline.subtract(before);
-
     if (!when.isAfter(DateTime.now())) return;
+
+    final scheduled = tz.TZDateTime.from(when, tz.local);
+    print('Scheduling for: $scheduled  (local: ${tz.local.name})');
 
     const androidDetails = AndroidNotificationDetails(
       'deadlines',
@@ -68,10 +71,10 @@ class NotificationService {
     await _plugin.zonedSchedule(
       notifIdFromDocId(docId),
       'Deadline soon',
-      '“$title” is due in ${before.inMinutes} minutes.',
-      tz.TZDateTime.from(when, tz.local),
+      '“$title” is due soon.',
+      scheduled,
       details,
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     );
   }
 

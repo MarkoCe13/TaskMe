@@ -16,6 +16,7 @@ dependencies:
   flutter_dotenv: ^6.0.0
   flutter_local_notifications: ^19.5.0
   timezone: ^0.10.1
+  flutter_native_timezone_2025: ^1.0.1
 
 dev_dependencies:
   flutter_test:
