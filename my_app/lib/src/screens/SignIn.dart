@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../services/auth.dart'; 
+import '../services/auth.dart';
 import 'SignUp.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -38,7 +38,26 @@ class _SignInScreenState extends State<SignInScreen> {
         Navigator.pushReplacementNamed(context, '/home');
       }
     } on FirebaseAuthException catch (e) {
-      _showError(e.message ?? 'Auth error');
+      String message;
+
+      switch (e.code) {
+        case 'user-not-found':
+          message = 'No user found for this email.';
+          break;
+        case 'wrong-password':
+          message = 'Incorrect password.';
+          break;
+        case 'invalid-email':
+          message = 'Invalid email address.';
+          break;
+        case 'user-disabled':
+          message = 'This account has been disabled.';
+          break;
+        default:
+          message = 'Authentication failed. Please try again.';
+      }
+
+      _showError(message);
     } catch (e) {
       _showError(e.toString());
     } finally {
@@ -74,7 +93,10 @@ class _SignInScreenState extends State<SignInScreen> {
                         prefixIcon: Icon(Icons.email_outlined),
                       ),
                       keyboardType: TextInputType.emailAddress,
-                      autofillHints: const [AutofillHints.username, AutofillHints.email],
+                      autofillHints: const [
+                        AutofillHints.username,
+                        AutofillHints.email
+                      ],
                       validator: (v) {
                         if (v == null || v.trim().isEmpty) {
                           return 'Email is required';
@@ -90,7 +112,9 @@ class _SignInScreenState extends State<SignInScreen> {
                         labelText: 'Password',
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
-                          icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
+                          icon: Icon(_obscure
+                              ? Icons.visibility
+                              : Icons.visibility_off),
                           onPressed: () => setState(() => _obscure = !_obscure),
                         ),
                       ),
@@ -113,7 +137,10 @@ class _SignInScreenState extends State<SignInScreen> {
                         onPressed: _loading ? null : _handleSignIn,
                         child: _loading
                             ? const SizedBox(
-                                width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2),
+                                width: 18,
+                                height: 18,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
                               )
                             : const Text('Sign in'),
                       ),
@@ -124,7 +151,8 @@ class _SignInScreenState extends State<SignInScreen> {
                           ? null
                           : () {
                               Navigator.of(context).push(
-                                MaterialPageRoute(builder: (_) => const SignUpScreen()),
+                                MaterialPageRoute(
+                                    builder: (_) => const SignUpScreen()),
                               );
                             },
                       child: const Text("Don't have an account? Sign up"),
