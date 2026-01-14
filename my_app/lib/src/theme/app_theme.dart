@@ -16,6 +16,19 @@ class AppTheme {
         elevation: 0,
         surfaceTintColor: Colors.white,
       ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: AppColors.taskMeGreen,
+        contentTextStyle: const TextStyle(
+          color: Colors.white,
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
+        behavior: SnackBarBehavior.floating,
+        elevation: 6,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16), 
+        ),
+      ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.taskMeGreen,

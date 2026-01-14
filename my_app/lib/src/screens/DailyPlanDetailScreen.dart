@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:my_app/src/theme/app_colors.dart';
 
 import '../models/daily_plan_models.dart';
 import '../services/ai_service.dart';
@@ -38,7 +39,8 @@ class DailyPlanDetailScreen extends StatelessWidget {
     if (user == null) return;
 
     final now = DateTime.now();
-    final title = 'Plan for ${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}';
+    final title =
+        'Plan for ${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}';
 
     await AiDailyPlanService.saveDailyPlan(
       title: title,
@@ -49,7 +51,7 @@ class DailyPlanDetailScreen extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Plan saved')),
       );
-      Navigator.pop(context); 
+      Navigator.pop(context);
     }
   }
 
@@ -60,16 +62,24 @@ class DailyPlanDetailScreen extends StatelessWidget {
         title: const Text('AI Daily Plan'),
         actions: [
           if (allowSave)
-            IconButton(
-              icon: const Icon(Icons.bookmark_add_outlined),
-              onPressed: () => _savePlan(context),
-              tooltip: 'Save plan',
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: IconButton(
+                tooltip: 'Save plan',
+                iconSize: 30,
+                onPressed: () => _savePlan(context),
+                icon: const Icon(
+                  Icons.bookmark_add_outlined,
+                  color: AppColors.taskMeGreen,
+                ),
+              ),
             ),
         ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: ListView(
+          padding: const EdgeInsets.only(bottom: 60),
           children: [
             Text(
               result.summary,
@@ -79,7 +89,6 @@ class DailyPlanDetailScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-
             ...result.plan.map((p) {
               final isNonTask = _isNonTaskBlock(p.title);
 
@@ -100,7 +109,8 @@ class DailyPlanDetailScreen extends StatelessWidget {
                           p.title,
                           style: TextStyle(
                             fontSize: 15,
-                            fontWeight: isNonTask ? FontWeight.w500 : FontWeight.w600,
+                            fontWeight:
+                                isNonTask ? FontWeight.w500 : FontWeight.w600,
                             color: isNonTask ? Colors.black54 : Colors.black87,
                           ),
                         ),
@@ -117,7 +127,6 @@ class DailyPlanDetailScreen extends StatelessWidget {
                 ),
               );
             }),
-
             if (result.tips.isNotEmpty) ...[
               const SizedBox(height: 6),
               Card(

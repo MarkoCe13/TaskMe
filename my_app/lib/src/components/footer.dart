@@ -24,7 +24,7 @@ class Footer extends StatelessWidget {
         children: [
           IconButton(
             icon: const Icon(
-              Icons.list,
+              Icons.checklist,
               size: 38,
                color: AppColors.taskMeGreen,
             ),
@@ -44,7 +44,7 @@ class Footer extends StatelessWidget {
           ),
           IconButton(
             icon: const Icon(
-              Icons.add_box_outlined,
+              Icons.add_circle,
               size: 38,
                color: AppColors.taskMeGreen,
             ),

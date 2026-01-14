@@ -46,7 +46,8 @@ class _DailyPlanScreenState extends State<DailyPlanScreen> {
     }
   }
 
-  Future<void> _openSavedPlan(DocumentReference<Map<String, dynamic>> ref) async {
+  Future<void> _openSavedPlan(
+      DocumentReference<Map<String, dynamic>> ref) async {
     final snap = await ref.get();
     if (!snap.exists) return;
 
@@ -73,7 +74,9 @@ class _DailyPlanScreenState extends State<DailyPlanScreen> {
         title: const Text('Delete plan?'),
         content: const Text('This will permanently delete the saved plan.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
@@ -119,7 +122,6 @@ class _DailyPlanScreenState extends State<DailyPlanScreen> {
               ),
               const SizedBox(height: 10),
             ],
-
             Expanded(
               child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                 stream: plansQuery.snapshots(),
@@ -172,22 +174,25 @@ class _DailyPlanScreenState extends State<DailyPlanScreen> {
                 },
               ),
             ),
-
             const SizedBox(height: 12),
-
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton.icon(
-                onPressed: _generating ? null : _generateAndMaybeSave,
-                icon: _generating
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.auto_awesome),
-                label: Text(_generating ? 'Generating...' : 'Generate plan for today'),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 60), 
+              child: SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton.icon(
+                  onPressed: _generating ? null : _generateAndMaybeSave,
+                  icon: _generating
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.auto_awesome),
+                  label: Text(
+                    _generating ? 'Generating...' : 'Generate a plan for today',
+                  ),
+                ),
               ),
             ),
           ],

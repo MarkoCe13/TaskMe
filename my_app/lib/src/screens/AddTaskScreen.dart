@@ -41,6 +41,12 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     final time = await showTimePicker(
       context: context,
       initialTime: TimeOfDay(hour: now.hour, minute: now.minute),
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+          child: child!,
+        );
+      },
     );
     if (time == null) return;
 

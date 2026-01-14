@@ -52,15 +52,15 @@ class _TasksScreenState extends State<TasksScreen> {
                       items: const [
                         DropdownMenuItem(
                           value: 'pending',
-                          child: Text('PENDING'),
+                          child: Text('Pending'),
                         ),
                         DropdownMenuItem(
                           value: 'missed',
-                          child: Text('MISSED'),
+                          child: Text('Missed'),
                         ),
                         DropdownMenuItem(
                           value: 'done',
-                          child: Text('DONE'),
+                          child: Text('Done'),
                         ),
                       ],
                       onChanged: (v) {
@@ -468,7 +468,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
         'deadline': Timestamp.fromDate(_deadline!),
       });
 
-      // Notification sync
       try {
         if (_status.toLowerCase() == 'done') {
           await NotificationService.instance.cancelForDocId(widget.task.id);
@@ -601,8 +600,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-
-   
                 Card(
                   elevation: 2,
                   shape: RoundedRectangleBorder(
@@ -630,7 +627,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-
                 Card(
                   elevation: 2,
                   shape: RoundedRectangleBorder(
@@ -674,8 +670,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-
- 
                 Card(
                   elevation: 2,
                   shape: RoundedRectangleBorder(
@@ -707,9 +701,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 20),
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
@@ -717,11 +709,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                       height: 44,
                       width: 140,
                       child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
                         onPressed: _saving ? null : _save,
                         child: _saving
                             ? const SizedBox(
@@ -743,12 +730,22 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.red,
                           foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
                         ),
                         onPressed: _saving ? null : _deleteTask,
                         child: const Text('Delete'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    SizedBox(
+                      height: 44,
+                      width: 44,
+                      child: ElevatedButton(
+                        onPressed:
+                            _saving ? null : () => Navigator.pop(context),
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                        ),
+                        child: const Icon(Icons.arrow_back),
                       ),
                     ),
                   ],
