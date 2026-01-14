@@ -75,7 +75,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     setState(() => _loading = true);
 
     try {
-      
       final docRef = await FirebaseFirestore.instance.collection('tasks').add({
         'userId': user.uid,
         'title': _titleCtrl.text.trim(),
@@ -240,8 +239,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   height: 44,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black87,
-                      foregroundColor: Colors.white,
                       minimumSize: const Size(120, 44),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),

@@ -5,6 +5,7 @@ import 'package:my_app/src/screens/DailyPlanScreen.dart';
 import 'package:my_app/src/screens/SignIn.dart';
 import 'package:my_app/src/screens/TasksScreen.dart';
 import 'package:my_app/src/services/notification_service.dart';
+import 'package:my_app/src/theme/app_theme.dart';
 import 'firebase_options.dart';
 import 'src/screens/HomeScreen.dart';
 import 'src/screens/SignUp.dart';
@@ -26,6 +27,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      theme: AppTheme.light(),
       routes: {
         '/signin': (_) => const SignInScreen(),
         '/signup': (_) => const SignUpScreen(),

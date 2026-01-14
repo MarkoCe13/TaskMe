@@ -17,7 +17,7 @@ class TasksScreen extends StatefulWidget {
 enum DeadlineOrder { oldestFirst, newestFirst }
 
 class _TasksScreenState extends State<TasksScreen> {
-  String _statusFirst = 'pending'; 
+  String _statusFirst = 'pending';
   DeadlineOrder _deadlineOrder = DeadlineOrder.oldestFirst;
 
   @override
@@ -92,9 +92,7 @@ class _TasksScreenState extends State<TasksScreen> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 16),
-
               Expanded(
                 child: StreamBuilder<QuerySnapshot>(
                   stream: tasksQuery.snapshots(),
@@ -139,8 +137,7 @@ class _TasksScreenState extends State<TasksScreen> {
                         t.deadline ?? DateTime(9999);
 
                     int cmpDeadline(_TaskItem a, _TaskItem b) {
-                      final cmp =
-                          safeDeadline(a).compareTo(safeDeadline(b));
+                      final cmp = safeDeadline(a).compareTo(safeDeadline(b));
                       return _deadlineOrder == DeadlineOrder.oldestFirst
                           ? cmp
                           : -cmp;
@@ -214,7 +211,7 @@ class _TaskCard extends StatelessWidget {
         return const Color(0xFF4CAF50);
       case 'missed':
         return const Color(0xFFE53935);
-      default: 
+      default:
         return Colors.grey.shade400;
     }
   }
@@ -315,8 +312,6 @@ class _TaskCard extends StatelessWidget {
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black87,
-                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(horizontal: 18),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(6),
@@ -352,7 +347,8 @@ class _TaskCard extends StatelessWidget {
                           .collection('tasks')
                           .doc(task.id)
                           .update({'status': 'done'});
-                      await NotificationService.instance.cancelForDocId(task.id);
+                      await NotificationService.instance
+                          .cancelForDocId(task.id);
                     }
                   },
                   borderRadius: BorderRadius.circular(20),
@@ -575,16 +571,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Edit task',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
                 const SizedBox(height: 16),
-
-                // Title
                 Card(
                   elevation: 2,
                   shape: RoundedRectangleBorder(
@@ -615,7 +602,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                // Description
+   
                 Card(
                   elevation: 2,
                   shape: RoundedRectangleBorder(
@@ -644,7 +631,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                // Status (ONLY 3 OPTIONS)
                 Card(
                   elevation: 2,
                   shape: RoundedRectangleBorder(
@@ -689,7 +675,7 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                // Deadline
+ 
                 Card(
                   elevation: 2,
                   shape: RoundedRectangleBorder(
@@ -732,8 +718,6 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
                       width: 140,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black87,
-                          foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
