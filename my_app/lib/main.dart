@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:my_app/src/screens/AddTaskScreen.dart';
+import 'package:my_app/src/screens/DailyPlanScreen.dart';
 import 'package:my_app/src/screens/SignIn.dart';
 import 'package:my_app/src/screens/TasksScreen.dart';
 import 'package:my_app/src/services/notification_service.dart';
@@ -31,6 +32,7 @@ class MyApp extends StatelessWidget {
         '/home': (_) => const HomeScreen(),
         '/add': (_) => const AddTaskScreen(),
         '/tasks': (_) => const TasksScreen(),
+        '/daily-plan': (_) => const DailyPlanScreen()
       },
       home: const SignInScreen(),
     );
