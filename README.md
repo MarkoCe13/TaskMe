@@ -21,6 +21,19 @@ It helps users manage tasks, track productivity, and automatically generate a **
 
 ---
 
+### 🔔 Notifications (Deadline Reminders)
+- Local deadline reminders using **flutter_local_notifications**
+- Notifications are scheduled automatically when a task has a future deadline
+- Default reminder timing:
+  - **30 minutes before the task deadline** (configurable)
+- Notification behavior is synchronized with task status:
+  - Marking a task as **DONE** cancels its scheduled reminder
+  - Switching a task back to **PENDING** re-schedules the reminder
+- Timezone-aware scheduling to ensure reminders trigger at the correct local time
+- Works fully offline once scheduled (no internet connection required)
+
+---
+
 ### 📊 Productivity Overview
 - User profile dashboard with:
   - All-time statistics
