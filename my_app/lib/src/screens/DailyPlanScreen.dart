@@ -176,7 +176,7 @@ class _DailyPlanScreenState extends State<DailyPlanScreen> {
             ),
             const SizedBox(height: 12),
             Padding(
-              padding: const EdgeInsets.only(bottom: 60), 
+              padding: const EdgeInsets.only(bottom: 60),
               child: SizedBox(
                 width: double.infinity,
                 height: 48,

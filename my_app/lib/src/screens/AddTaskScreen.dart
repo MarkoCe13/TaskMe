@@ -91,11 +91,12 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       });
 
       final now = DateTime.now();
+
       await NotificationService.instance.scheduleDeadlineReminder(
         docId: docRef.id,
-        title: 'Test scheduled',
-        deadline: now.add(const Duration(minutes: 2)),
-        before: const Duration(seconds: 10),
+        title: _titleCtrl.text.trim(),
+        deadline: now.add(const Duration(seconds: 20)),
+        before: const Duration(seconds: 5),
       );
 
       await NotificationService.instance.debugPending();
@@ -136,7 +137,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-
                 Card(
                   elevation: 2,
                   shape: RoundedRectangleBorder(
@@ -168,7 +168,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-
                 Card(
                   elevation: 2,
                   shape: RoundedRectangleBorder(
@@ -198,8 +197,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-
-                // Deadline
                 Card(
                   elevation: 2,
                   shape: RoundedRectangleBorder(
@@ -240,7 +237,6 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-
                 SizedBox(
                   height: 44,
                   child: ElevatedButton(
